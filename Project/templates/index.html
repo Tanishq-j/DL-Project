@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Churn Intelligence Portal</title>
+    <!-- Use standard premium system sans-serif font stack -->
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --border-color: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --primary: #38bdf8;
+            --secondary: #818cf8;
+            --accent: #fb923c;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar - Solid, fixed 240px, no floating shells, simple border-right */
+        .sidebar {
+            width: 240px;
+            background-color: #0b0f19;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            color: var(--text-primary);
+            margin-bottom: 32px;
+            padding-left: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary);
+            border-radius: 2px;
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item button {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 10px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 150ms ease, color 150ms ease;
+        }
+
+        .nav-item button:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active button {
+            background-color: var(--surface-color);
+            color: var(--primary);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            font-size: 11px;
+            color: var(--text-secondary);
+            padding-left: 8px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+        }
+
+        /* Main Content Container */
+        .main-container {
+            margin-left: 240px;
+            flex: 1;
+            padding: 40px;
+            max-width: 1200px;
+        }
+
+        header {
+            margin-bottom: 32px;
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            color: var(--text-primary);
+        }
+
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        /* Grid Layout for Diagnostic Form & Prediction Panel */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 7fr 5fr;
+            gap: 32px;
+            align-items: start;
+        }
+
+        /* Forms Styling - solid inputs, no animated lines */
+        .card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 24px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        input, select {
+            background-color: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            padding: 8px 12px;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            width: 100%;
+            transition: border-color 150ms ease, box-shadow 150ms ease;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+
+        .btn-submit {
+            background-color: var(--primary);
+            color: #0f172a;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 24px;
+            transition: background-color 150ms ease;
+        }
+
+        .btn-submit:hover {
+            background-color: #7dd3fc;
+        }
+
+        /* Diagnostic Panel Output Panel */
+        .diagnostic-card {
+            border-color: var(--border-color);
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .output-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-secondary);
+            font-size: 13px;
+            text-align: center;
+            padding: 40px;
+            flex: 1;
+        }
+
+        .output-empty svg {
+            stroke: var(--text-secondary);
+            opacity: 0.5;
+            margin-bottom: 16px;
+        }
+
+        .output-content {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            flex: 1;
+        }
+
+        .risk-display {
+            text-align: center;
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .risk-percentage {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .risk-badge.badge-success {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .risk-badge.badge-warning {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .risk-badge.badge-danger {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .recommendation-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .recommendation-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .recommendation-list li {
+            font-size: 13px;
+            color: var(--text-secondary);
+            position: relative;
+            padding-left: 18px;
+            line-height: 1.4;
+        }
+
+        .recommendation-list li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Model Performance Tab Details */
+        .perf-container {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .chart-box {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            height: 320px;
+        }
+
+        .chart-box-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .stat-card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px 20px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-value.success { color: var(--success); }
+
+        .arch-card {
+            margin-top: 16px;
+        }
+
+        .arch-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .arch-table th, .arch-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .arch-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .arch-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Spinner for UI processing */
+        .spinner {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <!-- Include Chart.js for performance graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <!-- Standard Left Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">Churn Analytics</div>
+        <ul class="nav-list">
+            <li class="nav-item active" id="nav-diag">
+                <button onclick="switchTab('diagnostic')">Diagnostic Portal</button>
+            </li>
+            <li class="nav-item" id="nav-perf">
+                <button onclick="switchTab('performance')">Model Performance</button>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            MLP Neural Network<br>
+            Scikit-Learn • Lab 3<br>
+            Accuracy: 81.33%
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        
+        <!-- Tab 1: Diagnostic View -->
+        <section id="view-diagnostic" class="view-section active">
+            <header>
+                <h1>Customer Diagnostic Portal</h1>
+            </header>
+            
+            <div class="workspace-grid">
+                
+                <!-- Left Input Form Card -->
+                <div class="card">
+                    <div class="card-title">Customer Profile Information</div>
+                    
+                    <form id="predict-form" onsubmit="runDiagnostic(event)">
+                        <div class="form-grid">
+                            
+                            <!-- Demographics -->
+                            <div class="form-group">
+                                <label for="gender">Gender</label>
+                                <select id="gender" name="gender" required>
+                                    {% for val in mappings.gender %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="SeniorCitizen">Senior Citizen</label>
+                                <select id="SeniorCitizen" name="SeniorCitizen" required>
+                                    <option value="0">No</option>
+                                    <option value="1">Yes</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="Partner">Has Partner</label>
+                                <select id="Partner" name="Partner" required>
+                                    {% for val in mappings.Partner %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="Dependents">Has Dependents</label>
+                                <select id="Dependents" name="Dependents" required>
+                                    {% for val in mappings.Dependents %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Account Settings -->
+                            <div class="form-group">
+                                <label for="tenure">Tenure (months)</label>
+                                <input type="number" id="tenure" name="tenure" min="0" max="100" value="12" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="PhoneService">Phone Service</label>
+                                <select id="PhoneService" name="PhoneService" required>
+                                    {% for val in mappings.PhoneService %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="MultipleLines">Multiple Lines</label>
+                                <select id="MultipleLines" name="MultipleLines" required>
+                                    {% for val in mappings.MultipleLines %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="InternetService">Internet Service</label>
+                                <select id="InternetService" name="InternetService" required>
+                                    {% for val in mappings.InternetService %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Add-on Services -->
+                            <div class="form-group">
+                                <label for="OnlineSecurity">Online Security</label>
+                                <select id="OnlineSecurity" name="OnlineSecurity" required>
+                                    {% for val in mappings.OnlineSecurity %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="OnlineBackup">Online Backup</label>
+                                <select id="OnlineBackup" name="OnlineBackup" required>
+                                    {% for val in mappings.OnlineBackup %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="DeviceProtection">Device Protection</label>
+                                <select id="DeviceProtection" name="DeviceProtection" required>
+                                    {% for val in mappings.DeviceProtection %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="TechSupport">Tech Support</label>
+                                <select id="TechSupport" name="TechSupport" required>
+                                    {% for val in mappings.TechSupport %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="StreamingTV">Streaming TV</label>
+                                <select id="StreamingTV" name="StreamingTV" required>
+                                    {% for val in mappings.StreamingTV %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="StreamingMovies">Streaming Movies</label>
+                                <select id="StreamingMovies" name="StreamingMovies" required>
+                                    {% for val in mappings.StreamingMovies %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Contract & Billing -->
+                            <div class="form-group">
+                                <label for="Contract">Contract Type</label>
+                                <select id="Contract" name="Contract" required>
+                                    {% for val in mappings.Contract %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="PaperlessBilling">Paperless Billing</label>
+                                <select id="PaperlessBilling" name="PaperlessBilling" required>
+                                    {% for val in mappings.PaperlessBilling %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="PaymentMethod">Payment Method</label>
+                                <select id="PaymentMethod" name="PaymentMethod" required>
+                                    {% for val in mappings.PaymentMethod %}
+                                    <option value="{{ val }}">{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="MonthlyCharges">Monthly Charges ($)</label>
+                                <input type="number" step="0.01" id="MonthlyCharges" name="MonthlyCharges" min="15" max="150" value="65.0" required>
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <label for="TotalCharges">Total Charges ($) (Leave blank to use mean)</label>
+                                <input type="number" step="0.01" id="TotalCharges" name="TotalCharges" placeholder="Automatically calculated if blank">
+                            </div>
+                            
+                        </div>
+                        <button type="submit" class="btn-submit">Run Neural Network Diagnostic</button>
+                    </form>
+                </div>
+                
+                <!-- Right Output Panel Card -->
+                <div class="card diagnostic-card">
+                    <div class="card-title">Model Diagnostics Output</div>
+                    
+                    <!-- Pre-analysis state -->
+                    <div id="output-empty-panel" class="output-empty">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        Enter customer profile data on the left to trigger deep learning model inference.
+                    </div>
+                    
+                    <!-- Loading state -->
+                    <div id="diagnostic-loading" class="spinner"></div>
+                    
+                    <!-- Predicted state -->
+                    <div id="output-content-panel" class="output-content">
+                        <div class="risk-display">
+                            <div class="risk-percentage" id="out-risk">0.0%</div>
+                            <div class="risk-badge" id="out-badge">LOW RISK</div>
+                        </div>
+                        
+                        <div class="recommendation-title">Actionable Retention Strategy</div>
+                        <ul class="recommendation-list" id="out-recommendations">
+                            <!-- Populated dynamically -->
+                        </ul>
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </section>
+        
+        <!-- Tab 2: Performance View -->
+        <section id="view-performance" class="view-section">
+            <header>
+                <h1>Model Architecture & Performance</h1>
+            </header>
+            
+            <div class="perf-container">
+                
+                <!-- Numeric Statistics Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Model Architecture</div>
+                        <div class="stat-value">MLP Classifier</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Dataset Size</div>
+                        <div class="stat-value">1,500 Rows</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Activation Function</div>
+                        <div class="stat-value">Sigmoid</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Test Set Accuracy</div>
+                        <div class="stat-value success">81.33%</div>
+                    </div>
+                </div>
+                
+                <!-- Interactive Loss & Accuracy Charts -->
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <div class="chart-box-title">Model Loss Curve (50 Epochs)</div>
+                        <canvas id="lossChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <div class="chart-box-title">Model Accuracy Curve (50 Epochs)</div>
+                        <canvas id="accChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Architecture Grid -->
+                <div class="card arch-card">
+                    <div class="card-title">Neural Network Layer Breakdown</div>
+                    <table class="arch-table">
+                        <thead>
+                            <tr>
+                                <th>Layer Name</th>
+                                <th>Layer Type</th>
+                                <th>Nodes / Units</th>
+                                <th>Activation Function</th>
+                                <th>Parameter Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Input Layer</td>
+                                <td>Dense / Fully Connected</td>
+                                <td>19 input features</td>
+                                <td>None</td>
+                                <td>—</td>
+                            </tr>
+                            <tr>
+                                <td>Hidden Layer 1</td>
+                                <td>Dense / Fully Connected</td>
+                                <td>32 units</td>
+                                <td>Sigmoid (Logistic)</td>
+                                <td>640</td>
+                            </tr>
+                            <tr>
+                                <td>Hidden Layer 2</td>
+                                <td>Dense / Fully Connected</td>
+                                <td>16 units</td>
+                                <td>Sigmoid (Logistic)</td>
+                                528</td>
+                            </tr>
+                            <tr>
+                                <td>Output Layer</td>
+                                <td>Dense / Fully Connected</td>
+                                <td>1 unit</td>
+                                <td>Sigmoid (Logistic)</td>
+                                <td>17</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
+        </section>
+        
+    </main>
+
+    <script>
+        // Tab switching logic
+        function switchTab(tabId) {
+            // Remove active classes
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+            
+            // Add active classes
+            if (tabId === 'diagnostic') {
+                document.getElementById('nav-diag').classList.add('active');
+                document.getElementById('view-diagnostic').classList.add('active');
+            } else if (tabId === 'performance') {
+                document.getElementById('nav-perf').classList.add('active');
+                document.getElementById('view-performance').classList.add('active');
+                
+                // Initialize charts on performance tab open
+                initCharts();
+            }
+        }
+
+        // Form Submission prediction handler
+        function runDiagnostic(event) {
+            event.preventDefault();
+            
+            const form = document.getElementById('predict-form');
+            const formData = new FormData(form);
+            
+            // Show loading, hide empty output & current output
+            document.getElementById('output-empty-panel').style.display = 'none';
+            document.getElementById('output-content-panel').style.display = 'none';
+            document.getElementById('diagnostic-loading').style.display = 'block';
+            
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Hide loading spinner
+                document.getElementById('diagnostic-loading').style.display = 'none';
+                
+                if (data.success) {
+                    // Populate prediction details
+                    const riskPerc = document.getElementById('out-risk');
+                    const riskBadge = document.getElementById('out-badge');
+                    const recList = document.getElementById('out-recommendations');
+                    
+                    riskPerc.innerText = `${data.risk_percentage}%`;
+                    riskBadge.innerText = data.category;
+                    
+                    // Reset and apply badge colors
+                    riskBadge.className = 'risk-badge';
+                    if (data.color === 'success') {
+                        riskBadge.classList.add('badge-success');
+                        riskPerc.style.color = 'var(--success)';
+                    } else if (data.color === 'warning') {
+                        riskBadge.classList.add('badge-warning');
+                        riskPerc.style.color = 'var(--warning)';
+                    } else {
+                        riskBadge.classList.add('badge-danger');
+                        riskPerc.style.color = 'var(--danger)';
+                    }
+                    
+                    // Clear recommendations
+                    recList.innerHTML = '';
+                    data.recommendations.forEach(rec => {
+                        const li = document.createElement('li');
+                        li.innerText = rec;
+                        recList.appendChild(li);
+                    });
+                    
+                    // Show output content
+                    document.getElementById('output-content-panel').style.display = 'flex';
+                } else {
+                    alert(`Error running diagnostic: ${data.error}`);
+                    document.getElementById('output-empty-panel').style.display = 'flex';
+                }
+            })
+            .catch(err => {
+                document.getElementById('diagnostic-loading').style.display = 'none';
+                document.getElementById('output-empty-panel').style.display = 'flex';
+                alert('Connection to Flask API failed. Make sure the server is running.');
+            });
+        }
+
+        // Performance Charts Initialization
+        let chartsInitialized = false;
+        let lossChartInstance = null;
+        let accChartInstance = null;
+
+        function initCharts() {
+            if (chartsInitialized) return;
+            
+            fetch('/history-data')
+            .then(res => res.json())
+            .then(data => {
+                const epochs = Array.from({length: data.loss.length}, (_, i) => i + 1);
+                
+                // Customize Chart.js global settings for premium dark look
+                Chart.defaults.color = '#94a3b8';
+                Chart.defaults.borderColor = '#334155';
+                Chart.defaults.font.family = 'var(--font-stack)';
+                
+                // 1. Loss Chart
+                const ctxLoss = document.getElementById('lossChart').getContext('2d');
+                lossChartInstance = new Chart(ctxLoss, {
+                    type: 'line',
+                    data: {
+                        labels: epochs,
+                        datasets: [
+                            {
+                                label: 'Training Loss',
+                                data: data.loss,
+                                borderColor: '#818cf8',
+                                backgroundColor: 'rgba(129, 140, 248, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.2
+                            },
+                            {
+                                label: 'Validation Loss',
+                                data: data.val_loss,
+                                borderColor: '#fb923c',
+                                backgroundColor: 'rgba(251, 146, 60, 0.05)',
+                                borderWidth: 2,
+                                borderDash: [4, 4],
+                                fill: false,
+                                tension: 0.2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top', labels: { boxWidth: 12, usePointStyle: true } }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Epochs' }, grid: { display: false } },
+                            y: { title: { display: true, text: 'Loss' } }
+                        }
+                    }
+                });
+
+                // 2. Accuracy Chart
+                const ctxAcc = document.getElementById('accChart').getContext('2d');
+                accChartInstance = new Chart(ctxAcc, {
+                    type: 'line',
+                    data: {
+                        labels: epochs,
+                        datasets: [
+                            {
+                                label: 'Training Accuracy',
+                                data: data.accuracy,
+                                borderColor: '#38bdf8',
+                                backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.2
+                            },
+                            {
+                                label: 'Validation Accuracy',
+                                data: data.val_accuracy,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                                borderWidth: 2,
+                                borderDash: [4, 4],
+                                fill: false,
+                                tension: 0.2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top', labels: { boxWidth: 12, usePointStyle: true } }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Epochs' }, grid: { display: false } },
+                            y: { title: { display: true, text: 'Accuracy' }, min: 0.4, max: 1.0 }
+                        }
+                    }
+                });
+                
+                chartsInitialized = true;
+            })
+            .catch(err => {
+                console.error("Failed to load history metrics data:", err);
+            });
+        }
+    </script>
+</body>
+</html>

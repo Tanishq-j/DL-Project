@@ -1,0 +1,272 @@
+==================================================
+FILE: DL_LAB06.pdf
+==================================================
+Total Pages: 5
+--- Page 1 OCR ---
+5/28/26, 11:03 PM
+A48_Exp6 ipynb
+Colab
+DL Assignment No. 6 - CNN And Transfer Learning for Maleria Detection
+Name: Tanishq Jain
+Roll No:: 448
+PRN: 2324000422
+from google
+colab import
+drive
+drive.mount (
+Icontent/drive
+Drive already
+mounted
+Icontent/drive;
+to attempt
+to forcibly remount,
+call drive.mount (
+Icontent/drive
+force
+remount-Tr
+import
+dataset_
+base_path
+[content/drive/MyDrive/DL/Maleria_Dataset
+train
+dir
+path. join(dataset
+base
+path,
+
+--- Page 3 OCR ---
+5/28/26, 11:03 PM
+A48_Exp6 ipynb =
+Colab
+import matplotlib.pyplot
+plt
+# Plot training
+and
+validation accuracy
+plt.figure(figsize-(12 , 5) )
+plt.subplot (1,
+plt-plot (history.history[
+accuracy' ],
+label-'Training Accuracy
+plt-plot (history.history[ 'val_accuracy' ],
+label-'Validation Accuracy
+plt.title( 'Training and Validation Accuracy
+plt-xlabel (
+Epoch"
+plt-ylabel(
+Accuracy
+plt.legend ( )
+# Plot
+training
+and
+validation
+loss
+plt.subplot (1,
+plt-plot(history.history[
+loss
+label = 'Training
+
+==================================================
+FILE: DL_LAB08.pdf
+==================================================
+Total Pages: 15
+--- Page 1 OCR ---
+5/28/26, 10.21 PM
+A-48
+8.ipynb _
+Colab
+Tanishq Jain
+2324000422
+TY CSE(AIML)
+A-48
+import
+numpy
+import pandas
+import kagglehub
+Download latest
+version
+path
+kagglehub.dataset_dolnload (
+atreyamajumdar/kidney_
+cancer
+print( "Path
+to dataset
+files:
+path)
+Using Colab cache for faster
+access
+to the
+kidney-cancer
+dataset
+Path
+dataset files
+/kaggle/input/kidney_
+
+--- Page 8 OCR ---
+5/28/26, 10.21 PM
+A-48 Exp. 8 ipynb
+Colab
+VGG16 Kidney Cancer Accuracy Curve
+Training Accuracy
+Validation Accuracy
+0.8
+0.7
+0.6
+1
+0.5
+0.4
+0.3
+Epochs
+VGG19 Kidney Cancer Accuracy Curve
+Training Accuracy
+Validation Accuracy
+0.6
+0.5
+1
+0.4
+0.3
+0.2
+0.0
+0.5
+1.0
+15
+2.0
+2.5
+3.0
+
+==================================================
+FILE: DL_LAB09.pdf
+==================================================
+Total Pages: 6
+--- Page 1 OCR ---
+5/28/26, 10:19 PM
+A48 Expt. 9.ipynb
+Colab
+Tansihq Jain
+TY (AIML) - A
+2324000422
+A-48
+Expt. 9 LSTM Stock
+import pandas
+import
+numpy
+as np
+import matplotlib
+pyplot
+plt
+import
+seaborn
+sns
+import plotly
+express
+from sklearn.preprocessing
+import MinMaxScaler
+from
+tensorflow import
+keras
+from
+keras.models import
+Sequential
+from
+keras.layers
+
+--- Page 4 OCR ---
+5/28/26, 10:19 PM
+A48 Expt. 9.ipynb
+Colab
+0.010521
+x_train,y_
+train
+array(x_train)
+np.array(y_train)
+# 3
+dimensional
+shape
+(number
+rows
+timestamp,
+o/p closing price
+x_train
+np.reshape(x_train, (x_train. shape[0],x_train. shape[1],1) )
+x_train.shape
+(1550,
+60, 1)
+#input_shape
+(timestamp,
+closing price
+model
+Sequential()
+model.add(LSTM(S0,return
+equences-True, input_shape
+train. shape[1],1)) )
+model.add(LSTM( S0,return
+equences
+
+==================================================
+FILE: Exp 3 DL.pdf
+==================================================
+Total Pages: 7
+--- Page 1 OCR ---
+5/8/26, 10.05 PM
+Assg: 3 MNIST.ipynb
+Colab
+#Tanishq
+Jain
+#TY CSE (AIML
+A-48
+#2324000422
+import
+pandas
+import numpy
+import matplotlib
+pyplot
+plt
+import
+tensorflow
+from
+tensorflow import keras
+from
+tensorflow
+keras
+models
+import Sequential
+from
+tensorflow keras.layers
+import
+Dense,
+Flatten
+from keras.datasets
+import mnist
+
+--- Page 4 OCR ---
+5/8/26, 10.05 PM
+Assg: 3 MNISTipynb
+Colab
+Model:
+sequential_1"
+Layer (type)
+Output Shape
+Param
+flatten_
+(Flatten)
+(None,
+784)
+dense
+(Dense)
+(None,
+128)
+100,480
+dense_21
+(Dense)
+(Rane
+64)
+8,256
+dense_22
+(Dense)
+Nore_
+32)
+2,080
+dense_
+(Dense)
+(None,
+
